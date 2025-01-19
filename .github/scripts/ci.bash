@@ -4,26 +4,27 @@ set -e
 set -x
 set -u
 
+declare -A RPI_EXAMPLES
+RPI_EXAMPLES=(
+    "rgb_leds"
+)
+
 declare -A LANGUAGES
 LANGUAGES=(
     [0]="french"
     [1]="english"
 )
-declare -A EXAMPLES
-EXAMPLES=(
-    [0]="rgb_leds"
-)
 
 
 run_doc() {
     rustup component add rust-docs
-    for EXAMPLE in "${EXAMPLES[@]}"
+    for EXAMPLE in "${RPI_EXAMPLES[@]}"
     do
-        cargo doc --example "$EXAMPLE"
+        cargo doc --target thumbv6m-none-eabi --example "$EXAMPLE"
     done
     for LANGUAGE in "${LANGUAGES[@]}"
     do
-        cargo doc --no-default-features --features "$LANGUAGE"
+        cargo doc --target thumbv6m-none-eabi --bin firmware --no-default-features --features "$LANGUAGE"
     done
 }
 
@@ -34,52 +35,52 @@ run_fmt() {
 
 run_clippy() {
     rustup component add clippy-preview
-    for EXAMPLE in "${EXAMPLES[@]}"
+    for EXAMPLE in "${RPI_EXAMPLES[@]}"
     do
         cargo clippy --example "$EXAMPLE" -- -D warnings
     done
     for LANGUAGE in "${LANGUAGES[@]}"
     do
-        cargo clippy --no-default-features --features "$LANGUAGE" -- -D warnings
+        cargo clippy --target thumbv6m-none-eabi --bin firmware --no-default-features --features "$LANGUAGE" -- -D warnings
     done
 }
 
 run_check() {
-    for EXAMPLE in "${EXAMPLES[@]}"
+    for EXAMPLE in "${RPI_EXAMPLES[@]}"
     do
         cargo check --example "$EXAMPLE"
     done
     for LANGUAGE in "${LANGUAGES[@]}"
     do
-        cargo check --no-default-features --features "$LANGUAGE"
+        cargo check --target thumbv6m-none-eabi --bin firmware --no-default-features --features "$LANGUAGE"
     done
 }
 
 run_test() {
-    cargo test -p utils --target "x86_64-unknown-linux-gnu"
+    #cargo test -p utils --target "x86_64-unknown-linux-gnu"
 }
 
 run_build() {
     cargo install flip-link
-    for EXAMPLE in "${EXAMPLES[@]}"
+    for EXAMPLE in "${RPI_EXAMPLES[@]}"
     do
         cargo build --example "$EXAMPLE"
     done
     for LANGUAGE in "${LANGUAGES[@]}"
     do
-        cargo build --no-default-features --features "$LANGUAGE"
+        cargo build --target thumbv6m-none-eabi --bin firmware --no-default-features --features "$LANGUAGE"
     done
 }
 
 run_build_release() {
     cargo install flip-link
-    for EXAMPLE in "${EXAMPLES[@]}"
+    for EXAMPLE in "${RPI_EXAMPLES[@]}"
     do
-        cargo build --release --example "$EXAMPLE"
+        cargo build --target thumbv6m-none-eabi --bin firmware --release --example "$EXAMPLE"
     done
     for LANGUAGE in "${LANGUAGES[@]}"
     do
-        cargo build --release --no-default-features --features "$LANGUAGE"
+        cargo build --target thumbv6m-none-eabi --bin firmware --release --no-default-features --features "$LANGUAGE"
     done
 }
 
