@@ -1,0 +1,8 @@
+[package]
+name = "gen_front"
+edition = "2021"
+version.workspace = true
+rust-version.workspace = true
+authors.workspace = true
+
+[dependencies]

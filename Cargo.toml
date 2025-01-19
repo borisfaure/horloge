@@ -1,5 +1,5 @@
 [workspace]
-members = ["firmware"]
+members = ["firmware", "gen_front"]
 resolver = "2"
 
 [workspace.package]
