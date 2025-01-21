@@ -5,4 +5,11 @@ version.workspace = true
 rust-version.workspace = true
 authors.workspace = true
 
+[features]
+french = []
+english = []
+default = ["french"]
+
 [dependencies]
+quick-xml = "0.37"
+clap = "4.5"
