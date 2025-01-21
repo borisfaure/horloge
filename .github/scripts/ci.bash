@@ -57,7 +57,8 @@ run_check() {
 }
 
 run_test() {
-    #cargo test -p utils --target "x86_64-unknown-linux-gnu"
+#    cargo test -p utils --target "x86_64-unknown-linux-gnu"
+echo "no tests"
 }
 
 run_build() {
