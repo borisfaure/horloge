@@ -6,7 +6,7 @@ set -u
 
 declare -A RPI_EXAMPLES
 RPI_EXAMPLES=(
-    "rgb_leds"
+    [0]="rgb_leds"
 )
 
 declare -A LANGUAGES
