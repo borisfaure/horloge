@@ -35,7 +35,7 @@ fn main() {
     let font = matches.get_one::<PathBuf>("TTF").unwrap();
     let font_data = std::fs::read(font).unwrap();
     let fa = font::analyze_font(font_data).unwrap();
-    println!("Font: {:?}", fa);
+    println!("Font bounding_box: {:?}", fa.bounding_box);
 
     let svg = matches.get_one::<PathBuf>("SVG").unwrap();
     svg::generate(svg).unwrap();
