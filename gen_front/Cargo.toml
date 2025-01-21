@@ -13,3 +13,5 @@ default = ["french"]
 [dependencies]
 quick-xml = "0.37"
 clap = "4.5"
+ttf-parser = "0.25"
+thiserror = "2.0"
