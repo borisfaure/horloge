@@ -2,7 +2,7 @@
 
 use std::collections::HashMap;
 use thiserror::Error;
-use ttf_parser::{Face, Rect};
+use ttf_parser::{Face, GlyphId, OutlineBuilder, Rect};
 
 #[derive(Debug, Error)]
 pub enum Error {
@@ -15,6 +15,8 @@ pub enum Error {
 pub struct Glyph {
     /// Bounding box
     bounding_box: Rect,
+    /// Path
+    path: String,
 }
 
 /// Font analysis structure
@@ -26,6 +28,57 @@ pub struct FontAnalysis {
     pub bounding_box: Rect,
     /// HashMap of glyphs
     pub glyphs: HashMap<char, Glyph>,
+}
+
+struct Builder<'a>(&'a mut String);
+
+impl Builder<'_> {
+    fn finish(&mut self) {
+        if !self.0.is_empty() {
+            self.0.pop(); // remove trailing space
+        }
+    }
+}
+
+impl OutlineBuilder for Builder<'_> {
+    fn move_to(&mut self, x: f32, y: f32) {
+        use std::fmt::Write;
+        write!(self.0, "M {} {} ", x, y).unwrap()
+    }
+
+    fn line_to(&mut self, x: f32, y: f32) {
+        use std::fmt::Write;
+        write!(self.0, "L {} {} ", x, y).unwrap()
+    }
+
+    fn quad_to(&mut self, x1: f32, y1: f32, x: f32, y: f32) {
+        use std::fmt::Write;
+        write!(self.0, "Q {} {} {} {} ", x1, y1, x, y).unwrap()
+    }
+
+    fn curve_to(&mut self, x1: f32, y1: f32, x2: f32, y2: f32, x: f32, y: f32) {
+        use std::fmt::Write;
+        write!(self.0, "C {} {} {} {} {} {} ", x1, y1, x2, y2, x, y).unwrap()
+    }
+
+    fn close(&mut self) {
+        self.0.push_str("Z ")
+    }
+}
+fn generate_path(face: &Face, glyph_id: GlyphId) -> (String, Rect) {
+    let mut path_buf = String::new();
+    let mut builder = Builder(&mut path_buf);
+    let bbox = match face.outline_glyph(glyph_id, &mut builder) {
+        Some(v) => v,
+        None => Rect {
+            x_min: 0,
+            y_min: 0,
+            x_max: 0,
+            y_max: 0,
+        },
+    };
+    builder.finish();
+    (path_buf, bbox)
 }
 
 impl FontAnalysis {
@@ -53,7 +106,7 @@ impl FontAnalysis {
         };
         for c in ('A'..='Z').chain(vec!['-']) {
             if let Some(glyph_id) = face.glyph_index(c) {
-                let bb = face.glyph_bounding_box(glyph_id).unwrap();
+                let (path, bb) = generate_path(&face, glyph_id);
                 println!("Glyph {:?} bounding box: {:?}", c, bb);
                 if bb.x_min < bounding_box.x_min {
                     bounding_box.x_min = bb.x_min;
@@ -67,15 +120,21 @@ impl FontAnalysis {
                 if bb.y_max > bounding_box.y_max {
                     bounding_box.y_max = bb.y_max;
                 }
-                let glyph = Glyph { bounding_box: bb };
+                let glyph = Glyph {
+                    bounding_box: bb,
+                    path,
+                };
                 glyphs.insert(c, glyph);
             }
         }
         let flower = '\u{2698}';
         if let Some(glyph_id) = face.glyph_index(flower) {
-            let bb = face.glyph_bounding_box(glyph_id).unwrap();
+            let (path, bb) = generate_path(&face, glyph_id);
             println!("Glyph {:?} bounding box: {:?}", ' ', bb);
-            let glyph = Glyph { bounding_box: bb };
+            let glyph = Glyph {
+                bounding_box: bb,
+                path,
+            };
             glyphs.insert(flower, glyph);
         }
         let descender = face.descender();
