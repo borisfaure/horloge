@@ -20,6 +20,8 @@ pub struct Glyph {
 /// Font analysis structure
 #[derive(Debug)]
 pub struct FontAnalysis {
+    /// Descender
+    descender: i16,
     /// General bounding box
     pub bounding_box: Rect,
     /// HashMap of glyphs
@@ -76,11 +78,13 @@ impl FontAnalysis {
             let glyph = Glyph { bounding_box: bb };
             glyphs.insert(flower, glyph);
         }
+        let descender = face.descender();
         //let units_per_em = face.units_per_em();
         //let cell_size = face.height() as f64 * FONT_SIZE / units_per_em as f64;
         Ok(Self {
             bounding_box,
             glyphs,
+            descender,
         })
     }
 }
