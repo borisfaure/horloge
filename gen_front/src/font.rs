@@ -1,5 +1,6 @@
 //! Font analysis module.
 
+use std::collections::HashMap;
 use thiserror::Error;
 use ttf_parser::{Face, Rect};
 
@@ -9,11 +10,20 @@ pub enum Error {
     FaceParse(#[from] ttf_parser::FaceParsingError),
 }
 
+/// Glyph structure
+#[derive(Debug)]
+pub struct Glyph {
+    /// Bounding box
+    bounding_box: Rect,
+}
+
 /// Font analysis structure
 #[derive(Debug)]
 pub struct FontAnalysis {
-    /// Bounding box
+    /// General bounding box
     pub bounding_box: Rect,
+    /// HashMap of glyphs
+    pub glyphs: HashMap<char, Glyph>,
 }
 
 impl FontAnalysis {
@@ -32,6 +42,7 @@ impl FontAnalysis {
         println!("Weight: {:?}", face.weight());
         println!("Width: {:?}", face.width());
         println!("Variable: {:?}", face.is_variable());
+        let mut glyphs = HashMap::new();
         let mut bounding_box = Rect {
             x_min: i16::MAX,
             y_min: i16::MAX,
@@ -54,11 +65,23 @@ impl FontAnalysis {
                 if bb.y_max > bounding_box.y_max {
                     bounding_box.y_max = bb.y_max;
                 }
+                let glyph = Glyph { bounding_box: bb };
+                glyphs.insert(c, glyph);
             }
+        }
+        let flower = '\u{2698}';
+        if let Some(glyph_id) = face.glyph_index(flower) {
+            let bb = face.glyph_bounding_box(glyph_id).unwrap();
+            println!("Glyph {:?} bounding box: {:?}", ' ', bb);
+            let glyph = Glyph { bounding_box: bb };
+            glyphs.insert(flower, glyph);
         }
         //let units_per_em = face.units_per_em();
         //let cell_size = face.height() as f64 * FONT_SIZE / units_per_em as f64;
-        Ok(Self { bounding_box })
+        Ok(Self {
+            bounding_box,
+            glyphs,
+        })
     }
 }
 
