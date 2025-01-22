@@ -1,5 +1,5 @@
 //! This example shows powerful PIO module in the RP2040 chip to communicate with WS2812 LED modules.
-//! See (https://www.sparkfun.com/categories/tags/ws2812)
+//! See (<https://www.sparkfun.com/categories/tags/ws2812>)
 
 #![no_std]
 #![no_main]
@@ -16,6 +16,7 @@ use embassy_rp::{bind_interrupts, clocks, into_ref, Peripheral, PeripheralRef};
 use embassy_time::{Duration, Ticker, Timer};
 use fixed::types::U24F8;
 use fixed_macro::fixed;
+
 use {defmt_rtt as _, panic_probe as _};
 
 bind_interrupts!(struct Irqs {
@@ -148,9 +149,9 @@ async fn main(_spawner: Spawner) {
     loop {
         for j in 0..(256 * 5) {
             debug!("New Colors:");
-            for i in 0..NUM_LEDS {
-                data[i] = wheel((((i * 256) as u16 / NUM_LEDS as u16 + j as u16) & 255) as u8);
-                debug!("R: {} G: {} B: {}", data[i].r, data[i].g, data[i].b);
+            for (i, d) in data.iter_mut().enumerate().take(NUM_LEDS) {
+                *d = wheel((((i * 256) as u16 / NUM_LEDS as u16 + j as u16) & 255) as u8);
+                debug!("R: {} G: {} B: {}", d.r, d.g, d.b);
             }
             ws2812.write(&data).await;
 

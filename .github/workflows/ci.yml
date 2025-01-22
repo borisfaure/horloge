@@ -25,5 +25,7 @@ jobs:
         run: curl --proto '=https' --tlsv1.3 -sSf https://sh.rustup.rs | sh -s -- -y --profile minimal
       - name: install rp2040 target
         run: rustup target add thumbv6m-none-eabi
+      - name: install flip-link
+        run: cargo install flip-link
       - name: act
         run: .github/scripts/ci.bash ${{ matrix.action }}

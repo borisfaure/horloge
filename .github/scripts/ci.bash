@@ -25,6 +25,7 @@ run_doc() {
     for LANGUAGE in "${LANGUAGES[@]}"
     do
         cargo doc --target thumbv6m-none-eabi --bin firmware --no-default-features --features "$LANGUAGE"
+        cargo doc --bin gen_front --no-default-features --features "$LANGUAGE"
     done
 }
 
@@ -37,22 +38,24 @@ run_clippy() {
     rustup component add clippy-preview
     for EXAMPLE in "${RPI_EXAMPLES[@]}"
     do
-        cargo clippy --example "$EXAMPLE" -- -D warnings
+        cargo clippy --target thumbv6m-none-eabi --example "$EXAMPLE" -- -D warnings
     done
     for LANGUAGE in "${LANGUAGES[@]}"
     do
         cargo clippy --target thumbv6m-none-eabi --bin firmware --no-default-features --features "$LANGUAGE" -- -D warnings
+        cargo clippy --bin gen_front --no-default-features --features "$LANGUAGE"
     done
 }
 
 run_check() {
     for EXAMPLE in "${RPI_EXAMPLES[@]}"
     do
-        cargo check --example "$EXAMPLE"
+        cargo check --target thumbv6m-none-eabi --example "$EXAMPLE"
     done
     for LANGUAGE in "${LANGUAGES[@]}"
     do
         cargo check --target thumbv6m-none-eabi --bin firmware --no-default-features --features "$LANGUAGE"
+        cargo check --bin gen_front --no-default-features --features "$LANGUAGE"
     done
 }
 
@@ -62,26 +65,26 @@ echo "no tests"
 }
 
 run_build() {
-    cargo install flip-link
     for EXAMPLE in "${RPI_EXAMPLES[@]}"
     do
-        cargo build --example "$EXAMPLE"
+        cargo build --target thumbv6m-none-eabi --example "$EXAMPLE"
     done
     for LANGUAGE in "${LANGUAGES[@]}"
     do
         cargo build --target thumbv6m-none-eabi --bin firmware --no-default-features --features "$LANGUAGE"
+        cargo build --bin gen_front --no-default-features --features "$LANGUAGE"
     done
 }
 
 run_build_release() {
-    cargo install flip-link
     for EXAMPLE in "${RPI_EXAMPLES[@]}"
     do
-        cargo build --target thumbv6m-none-eabi --bin firmware --release --example "$EXAMPLE"
+        cargo build --release --target thumbv6m-none-eabi --example "$EXAMPLE"
     done
     for LANGUAGE in "${LANGUAGES[@]}"
     do
-        cargo build --target thumbv6m-none-eabi --bin firmware --release --no-default-features --features "$LANGUAGE"
+        cargo build --release --target thumbv6m-none-eabi --bin firmware --no-default-features --features "$LANGUAGE"
+        cargo build --release --bin gen_front --no-default-features --features "$LANGUAGE"
     done
 }
 
