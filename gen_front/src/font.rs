@@ -14,18 +14,22 @@ pub enum Error {
 #[derive(Debug)]
 pub struct Glyph {
     /// Bounding box
-    bounding_box: Rect,
+    pub bounding_box: Rect,
     /// Path
-    path: String,
+    pub path: String,
 }
 
 /// Font analysis structure
 #[derive(Debug)]
 pub struct FontAnalysis {
     /// Descender
-    descender: i16,
-    /// General bounding box
-    pub bounding_box: Rect,
+    pub descender: i16,
+    /// Units per EM
+    pub units_per_em: u16,
+    /// Maximum height of the font
+    pub y_max: i16,
+    /// Average glyph width
+    pub glyph_width_avg: f64,
     /// HashMap of glyphs
     pub glyphs: HashMap<char, Glyph>,
 }
@@ -85,7 +89,8 @@ impl FontAnalysis {
     /// Create a new font analysis from a TTF file
     pub fn analyze(font: Vec<u8>) -> Result<Self, Error> {
         let face = Face::parse(&font, 0)?;
-        println!("Units per EM: {:?}", face.units_per_em());
+        let units_per_em = face.units_per_em();
+        println!("Units per EM: {:?}", units_per_em);
         println!("Ascender: {}", face.ascender());
         println!("Descender: {}", face.descender());
         println!("Line gap: {}", face.line_gap());
@@ -98,28 +103,18 @@ impl FontAnalysis {
         println!("Width: {:?}", face.width());
         println!("Variable: {:?}", face.is_variable());
         let mut glyphs = HashMap::new();
-        let mut bounding_box = Rect {
-            x_min: i16::MAX,
-            y_min: i16::MAX,
-            x_max: i16::MIN,
-            y_max: i16::MIN,
-        };
+        let mut y_max = i16::MIN;
+        let mut glyphs_count = 0;
+        let mut glyph_width_sum = 0;
         for c in ('A'..='Z').chain(vec!['-']) {
             if let Some(glyph_id) = face.glyph_index(c) {
                 let (path, bb) = generate_path(&face, glyph_id);
                 println!("Glyph {:?} bounding box: {:?}", c, bb);
-                if bb.x_min < bounding_box.x_min {
-                    bounding_box.x_min = bb.x_min;
+                if bb.y_max > y_max {
+                    y_max = bb.y_max;
                 }
-                if bb.y_min < bounding_box.y_min {
-                    bounding_box.y_min = bb.y_min;
-                }
-                if bb.x_max > bounding_box.x_max {
-                    bounding_box.x_max = bb.x_max;
-                }
-                if bb.y_max > bounding_box.y_max {
-                    bounding_box.y_max = bb.y_max;
-                }
+                glyphs_count += 1;
+                glyph_width_sum += bb.x_max - bb.x_min;
                 let glyph = Glyph {
                     bounding_box: bb,
                     path,
@@ -141,9 +136,11 @@ impl FontAnalysis {
         //let units_per_em = face.units_per_em();
         //let cell_size = face.height() as f64 * FONT_SIZE / units_per_em as f64;
         Ok(Self {
-            bounding_box,
-            glyphs,
             descender,
+            units_per_em,
+            y_max,
+            glyph_width_avg: glyph_width_sum as f64 / glyphs_count as f64,
+            glyphs,
         })
     }
 }
