@@ -55,51 +55,91 @@ impl Sizes {
         // We need to compute the best font size so that the grid is square.
         // We know the horizontal spacing between the LEDs, the size of the
         // LEDs, and the ratio of the letters
+        // The relationship between horizontal (`s`) and vertical (`v`) spacing is:
+        // s = k * v, where k = h / l (letter height-to-width ratio).
         //
-        // Let l be the width of the letter,
-        // h the height of the letter.
-        // k = h / l, or h = l * k
+        // Variables:
+        // - l: Width of a letter.
+        // - h: Height of a letter, h = k * l.
+        // - d: Spacing between the centers of consecutive LEDs.
+        // - k: Ratio of letter height to width, k = font.y_max / font.glyph_width_avg.
+        // - H: Height of the grid in terms of number of letters.
+        // - W: Width of the grid in terms of number of letters.
 
-        let d = LED_SPACING;
+        let d: f64 = LED_SPACING;
         println!("LED spacing: {}", d);
-        let k = font.y_max as f64 / font.glyph_width_avg;
-        println!("Letter ratio: {}", k);
-        const H: f64 = GRID_HEIGHT as f64;
-        const W: f64 = GRID_WIDTH as f64;
 
-        // The visual space (v) between two letters is the spacing between two
-        // LEDs, plus l.
-        // We want the grid to be visually a square, therefore the horizontal
-        // space between two letters is the same as the vertical space between
-        // two letters.
-        // let d be the spacing between the middle of two consecutive LEDs
-        // width of the square is:
-        // And we want v = d - l
-        // Square Width = W * l + (W - 1) * v
-        // SqW = W * l + (W - 1) * (d - l)
-        // SqW = W * l + W * d - W * l - d + l
-        // SqW = W * d - d + l
+        let k: f64 = font.y_max as f64 / font.glyph_width_avg;
+        println!("Letter ratio (height/width): {}", k);
+
+        const H: f64 = GRID_HEIGHT as f64; // Number of rows in the grid
+        const W: f64 = GRID_WIDTH as f64; // Number of columns in the grid
+
+        // Ensure variables are valid to avoid undefined behavior
+        assert!(H > 1.0, "Grid height must be greater than 1.");
+        assert!(W > 1.0, "Grid width must be greater than 1.");
+        assert!(k > 0.0, "Letter ratio (k) must be greater than 0.");
+
+        // Derivation of the formula for `l`:
+        // ----------------------------------------------------------
+        // 1. Horizontal space (`s`): s = d - l
+        // 2. Vertical space (`v`): v = s / k = (d - l) / k
         //
-        // height of the square is:
-        // Square Height = H * h + (H - 1) * v
-        // SqH = H * l * k + (H - 1) * (d - l)
-        // SqH = H * l * k + H * d - H * l - d + l
-        // SqW = SqH
-        // W * d - d + l = H * l * k + H * d - H * l - d + l
-        // W * d = H * l * k + H * d - H * l
-        // W * d = l * (H * k - H) + H * d
-        // W * d - H * d = l * (H * k - H)
-        // d * (W - H) = l * (H * k - H)
-        // d * (W - H) = l * H * (k - 1)
-        // l = d * (W - H) / (H * (k - 1))
+        // 3. Width of the square (`SqW`), width of all the letters + the
+        //    space between them:
+        //    SqW = W * l + (W - 1) * s
+        //    Substituting s = d - l:
+        //    SqW = W * l + (W - 1) * (d - l)
+        //    Expanding:
+        //    SqW = W * l + W * d - W * l - d + l
+        //    Simplifying by canceling out `W * l`:
+        //    SqW = W * d - d + l
+        //
+        // 4. Height of the square (`SqH`), height of all the letters + the
+        //    vertical space between them:
+        //    SqH = H * h + (H - 1) * v
+        //    Substituting h = k * l and v = (d - l) / k:
+        //    SqH = H * (k * l) + (H - 1) * ((d - l) / k)
+        //    Expanding (d - l) / k:
+        //    SqH = H * k * l + (H - 1) * d / k - (H - 1) * l / k
+        //    Grouping terms with `l`:
+        //    SqH = l * (H * k - (H - 1) / k) + (H - 1) * d / k
+        //
+        // 5. Squareness condition: SqW = SqH
+        //    Equating the two expressions:
+        //    W * d - d + l = l * (H * k - (H - 1) / k) + (H - 1) * d / k
+        //
+        // 6. Rearrange to isolate `l`:
+        //    W * d - d - (H - 1) * d / k = l * (H * k - (H - 1) / k - 1)
+        //    Simplifying by grouping terms with `d`:
+        //    d * (W - 1 - (H - 1) / k) = l * (H * k - (H - 1) / k - 1)
+        //    Solving for `l`:
+        //    l = d * (W - 1 - (H - 1) / k) / (H * k - (H - 1) / k - 1)
+        // ----------------------------------------------------------
 
-        let glyph_width = d * (W - H) / (H * (k - 1f64));
-        let space = d - glyph_width;
+        // Using the derived formula:
+        let numerator = d * (W - 1.0 - (H - 1.0) / k);
+        let denominator = H * k - (H - 1.0) / k - 1.0;
+
+        // Check for potential division by zero
+        assert!(
+            denominator != 0.0,
+            "Denominator in the font size calculation must not be zero."
+        );
+
+        let l: f64 = numerator / denominator;
+
+        // Output the computed letter width
+        println!("Computed letter width (l): {}", l);
+
+        let glyph_width = l;
+        let hspace = d - glyph_width;
+        let vspace = hspace / k;
         println!("Letter width: {}", glyph_width);
         println!("Letter height: {}", glyph_width * k);
-        println!("Letter spacing: {}", space);
-        let sq_width = W * glyph_width + (W - 1f64) * space;
-        let sq_height = H * glyph_width * k + (H - 1f64) * space;
+        println!("Letter spacing: horizontal {}, vertical {}", hspace, vspace);
+        let sq_width = W * glyph_width + (W - 1f64) * hspace;
+        let sq_height = H * glyph_width * k + (H - 1f64) * vspace;
         println!("Square width: {}", sq_width);
         println!("Square height: {}", sq_height);
 
