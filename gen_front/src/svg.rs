@@ -12,7 +12,6 @@ use crate::font::FontAnalysis;
 // Letter N: 31.45mm width, 51mm height
 const LED_SIZE: f64 = 5f64;
 const LED_SPACING: f64 = 12f64 + LED_SIZE;
-const FONT_SIZE: f64 = 128f64;
 
 const GRID_WIDTH: usize = 11;
 const GRID_HEIGHT: usize = 10;
@@ -48,6 +47,7 @@ const GRID: [[char; GRID_WIDTH]; GRID_HEIGHT] = [
 struct Sizes {
     document_width: f64,
     document_height: f64,
+    scale: f64,
 }
 
 impl Sizes {
@@ -133,6 +133,7 @@ impl Sizes {
         println!("Computed letter width (l): {}", l);
 
         let glyph_width = l;
+        let glyph_height = glyph_width * k;
         let hspace = d - glyph_width;
         let vspace = hspace / k;
         println!("Letter width: {}", glyph_width);
@@ -146,7 +147,9 @@ impl Sizes {
         let document_width = sq_width + 2f64 * MARGIN;
         let document_height = sq_height + 2f64 * MARGIN;
 
+        let scale = glyph_height / font.y_max as f64;
         Sizes {
+            scale,
             document_width,
             document_height,
         }
@@ -191,14 +194,13 @@ pub fn generate(file: &PathBuf, font: FontAnalysis) -> IoResult<()> {
     let mut writer = Writer::new_with_indent(BufWriter::new(File::create(file)?), b' ', 2);
     writer.write_event(Event::Decl(BytesDecl::new("1.0", Some("UTF-8"), None)))?;
 
-    let units_per_em = font.units_per_em;
-    let scale = FONT_SIZE / units_per_em as f64;
-    println!("scale:{}", scale);
     let sizes = Sizes::compute(&font);
     println!(
         "Document size: {}x{}",
         sizes.document_width, sizes.document_height
     );
+    let scale = sizes.scale;
+    println!("scale:{}", scale);
     let width_mm = format!("{}mm", sizes.document_width);
     let height_mm = format!("{}mm", sizes.document_height);
     let view_box = format!("0 0 {} {}", sizes.document_width, sizes.document_height);
