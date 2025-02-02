@@ -161,11 +161,14 @@ fn write_grid(
     writer: &mut Writer<BufWriter<File>>,
     font: FontAnalysis,
     scale: f64,
+    voffset: f64,
 ) -> IoResult<()> {
+    let base_y = MARGIN + voffset;
+    let base_x = MARGIN;
     for (y, row) in GRID.iter().enumerate().take(GRID_HEIGHT) {
         for (x, c) in row.iter().enumerate().take(GRID_WIDTH) {
-            let x_str = (x as f64 * LED_SPACING + MARGIN).to_string();
-            let y_str = (y as f64 * LED_SPACING + MARGIN).to_string();
+            let x_str = (x as f64 * LED_SPACING + base_x).to_string();
+            let y_str = (y as f64 * LED_SPACING + base_y).to_string();
             let glyph = font.glyphs.get(c).unwrap();
             let path = glyph.path.clone();
             let _bbox = glyph.bounding_box;
@@ -201,6 +204,10 @@ pub fn generate(file: &PathBuf, font: FontAnalysis) -> IoResult<()> {
     );
     let scale = sizes.scale;
     println!("scale:{}", scale);
+    let units_per_em = font.units_per_em as f64;
+    let descender = font.descender as f64;
+    println!("descender:{}", descender);
+    let voffset = (units_per_em + descender) * scale;
     let width_mm = format!("{}mm", sizes.document_width);
     let height_mm = format!("{}mm", sizes.document_height);
     let view_box = format!("0 0 {} {}", sizes.document_width, sizes.document_height);
@@ -220,7 +227,7 @@ pub fn generate(file: &PathBuf, font: FontAnalysis) -> IoResult<()> {
             writer
                 .create_element("g")
                 .with_attributes(vec![("id", "grid")].into_iter())
-                .write_inner_content(|w| write_grid(w, font, scale))?;
+                .write_inner_content(|w| write_grid(w, font, scale, voffset))?;
             Ok(())
         })?;
     Ok(())
