@@ -181,6 +181,9 @@ fn write_grid(
                 ("transform", transform.as_str()),
                 ("stroke", "black"),
                 ("stroke-width", "5"),
+                #[cfg(feature = "fill")]
+                ("fill", "black"),
+                #[cfg(not(feature = "fill"))]
                 ("fill", "none"),
             ];
             writer

@@ -8,6 +8,9 @@ authors.workspace = true
 [features]
 french = []
 english = []
+draw_leds = []
+draw_margins = []
+fill = []
 default = ["french"]
 
 [dependencies]
