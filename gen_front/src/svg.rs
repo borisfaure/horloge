@@ -156,6 +156,68 @@ impl Sizes {
     }
 }
 
+/// Draw the margins of the SVG file based on the document size and the
+/// constant MARGIN
+///
+/// Draw 4 rectangles in blue that represent the margins of the document
+//#[cfg(feature = "draw_margins")]
+fn draw_margins(writer: &mut Writer<BufWriter<File>>, doc: &Sizes) -> IoResult<()> {
+    let width = doc.document_width.to_string();
+    let margin = MARGIN.to_string();
+    /* Top margin */
+    let attrs = vec![
+        ("x", "0"),
+        ("y", "0"),
+        ("width", width.as_str()),
+        ("height", margin.as_str()),
+        ("fill", "blue"),
+    ];
+    writer
+        .create_element("rect")
+        .with_attributes(attrs.into_iter())
+        .write_empty()?;
+    /* Bottom margin */
+    let y = (doc.document_height - MARGIN).to_string();
+    let attrs = vec![
+        ("x", "0"),
+        ("y", y.as_str()),
+        ("width", width.as_str()),
+        ("height", margin.as_str()),
+        ("fill", "blue"),
+    ];
+    writer
+        .create_element("rect")
+        .with_attributes(attrs.into_iter())
+        .write_empty()?;
+    /* Left margin */
+    let height = doc.document_height.to_string();
+    let attrs = vec![
+        ("x", "0"),
+        ("y", "0"),
+        ("width", margin.as_str()),
+        ("height", height.as_str()),
+        ("fill", "blue"),
+    ];
+    writer
+        .create_element("rect")
+        .with_attributes(attrs.into_iter())
+        .write_empty()?;
+    /* Right margin */
+    let x = (doc.document_width - MARGIN).to_string();
+    let attrs = vec![
+        ("x", x.as_str()),
+        ("y", "0"),
+        ("width", margin.as_str()),
+        ("height", height.as_str()),
+        ("fill", "blue"),
+    ];
+    writer
+        .create_element("rect")
+        .with_attributes(attrs.into_iter())
+        .write_empty()?;
+    Ok(())
+}
+
 /// Write the grid to the SVG file
 fn write_grid(
     writer: &mut Writer<BufWriter<File>>,
@@ -227,6 +289,8 @@ pub fn generate(file: &PathBuf, font: FontAnalysis) -> IoResult<()> {
         .create_element("svg")
         .with_attributes(svg_attrs.into_iter())
         .write_inner_content(|writer| {
+            #[cfg(feature = "draw_margins")]
+            draw_margins(writer, &sizes)?;
             writer
                 .create_element("g")
                 .with_attributes(vec![("id", "grid")].into_iter())
