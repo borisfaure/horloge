@@ -156,6 +156,39 @@ impl Sizes {
     }
 }
 
+/// Draw the LEDs in the grid
+//#[cfg(feature = "draw_leds")]
+fn draw_leds(writer: &mut Writer<BufWriter<File>>, doc: &Sizes) -> IoResult<()> {
+    // Compute the horizontal offset to center the LEDs
+    let square_width = doc.document_width - 2.0 * MARGIN;
+    let right_offset = (square_width - (GRID_WIDTH as f64 - 1.) * LED_SPACING - LED_SIZE) / 2.;
+    // Compute the vertical spacing between the LEDs
+    let square_height = doc.document_height - 2.0 * MARGIN;
+    let vert_spacing = square_height / (GRID_HEIGHT as f64);
+
+    let base_y = MARGIN + vert_spacing / 2. - LED_SIZE / 2.;
+    let base_x = MARGIN + right_offset;
+    let led_size = LED_SIZE.to_string();
+    for y in 0..GRID_HEIGHT {
+        for x in 0..GRID_WIDTH {
+            let x_str = (x as f64 * LED_SPACING + base_x).to_string();
+            let y_str = (y as f64 * vert_spacing + base_y).to_string();
+            let attrs = vec![
+                ("x", x_str.as_str()),
+                ("y", y_str.as_str()),
+                ("width", led_size.as_str()),
+                ("height", led_size.as_str()),
+                ("fill", "red"),
+            ];
+            writer
+                .create_element("rect")
+                .with_attributes(attrs.into_iter())
+                .write_empty()?;
+        }
+    }
+    Ok(())
+}
+
 /// Draw the margins of the SVG file based on the document size and the
 /// constant MARGIN
 ///
@@ -222,15 +255,18 @@ fn draw_margins(writer: &mut Writer<BufWriter<File>>, doc: &Sizes) -> IoResult<(
 fn write_grid(
     writer: &mut Writer<BufWriter<File>>,
     font: FontAnalysis,
+    doc: &Sizes,
     scale: f64,
     voffset: f64,
 ) -> IoResult<()> {
     let base_y = MARGIN + voffset;
     let base_x = MARGIN;
+    let square_height = doc.document_height - 2.0 * MARGIN;
+    let vert_spacing = square_height / (GRID_HEIGHT as f64);
     for (y, row) in GRID.iter().enumerate().take(GRID_HEIGHT) {
         for (x, c) in row.iter().enumerate().take(GRID_WIDTH) {
             let x_str = (x as f64 * LED_SPACING + base_x).to_string();
-            let y_str = (y as f64 * LED_SPACING + base_y).to_string();
+            let y_str = (y as f64 * vert_spacing + base_y).to_string();
             let glyph = font.glyphs.get(c).unwrap();
             let path = glyph.path.clone();
             let _bbox = glyph.bounding_box;
@@ -289,12 +325,14 @@ pub fn generate(file: &PathBuf, font: FontAnalysis) -> IoResult<()> {
         .create_element("svg")
         .with_attributes(svg_attrs.into_iter())
         .write_inner_content(|writer| {
+            #[cfg(feature = "draw_leds")]
+            draw_leds(writer, &sizes)?;
             #[cfg(feature = "draw_margins")]
             draw_margins(writer, &sizes)?;
             writer
                 .create_element("g")
                 .with_attributes(vec![("id", "grid")].into_iter())
-                .write_inner_content(|w| write_grid(w, font, scale, voffset))?;
+                .write_inner_content(|w| write_grid(w, font, &sizes, scale, voffset))?;
             Ok(())
         })?;
     Ok(())

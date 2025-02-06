@@ -11,7 +11,7 @@ english = []
 draw_leds = []
 draw_margins = []
 fill = []
-default = ["french", "draw_margins"]
+default = ["french", "draw_leds"]
 
 [dependencies]
 quick-xml = "0.37"
