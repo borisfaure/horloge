@@ -1,4 +1,6 @@
 /target
 /Cargo.lock
-/*.uf2
+*.uf2
+*svg
+*ttf
 /openscad*
