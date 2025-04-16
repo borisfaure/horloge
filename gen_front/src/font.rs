@@ -10,13 +10,21 @@ pub enum Error {
     FaceParse(#[from] ttf_parser::FaceParsingError),
 }
 
+#[derive(Debug, Copy, Clone)]
+pub struct BoundingBox {
+    pub x_min: i16,
+    pub y_min: i16,
+    pub x_max: i16,
+    pub y_max: i16,
+}
+
 /// Glyph structure
 #[derive(Debug)]
 pub struct Glyph {
-    /// Bounding box
-    pub bounding_box: Rect,
     /// Path
     pub path: String,
+    /// Bounding box path
+    pub bbox_path: String,
 }
 
 /// Font analysis structure
@@ -69,7 +77,7 @@ impl OutlineBuilder for Builder<'_> {
         self.0.push_str("Z ")
     }
 }
-fn generate_path(face: &Face, glyph_id: GlyphId) -> (String, Rect) {
+fn generate_path(face: &Face, glyph_id: GlyphId) -> (String, BoundingBox) {
     let mut path_buf = String::new();
     let mut builder = Builder(&mut path_buf);
     let bbox = match face.outline_glyph(glyph_id, &mut builder) {
@@ -82,7 +90,13 @@ fn generate_path(face: &Face, glyph_id: GlyphId) -> (String, Rect) {
         },
     };
     builder.finish();
-    (path_buf, bbox)
+    let custom_bbox = BoundingBox {
+        x_min: bbox.x_min,
+        y_min: bbox.y_min,
+        x_max: bbox.x_max,
+        y_max: bbox.y_max,
+    };
+    (path_buf, custom_bbox)
 }
 
 impl FontAnalysis {
@@ -115,10 +129,11 @@ impl FontAnalysis {
                 }
                 glyphs_count += 1;
                 glyph_width_sum += bb.x_max - bb.x_min;
-                let glyph = Glyph {
-                    bounding_box: bb,
-                    path,
-                };
+                let bbox_path = format!(
+                    "M {} {} L {} {} L {} {} L {} {} Z",
+                    bb.x_min, bb.y_min, bb.x_max, bb.y_min, bb.x_max, bb.y_max, bb.x_min, bb.y_max
+                );
+                let glyph = Glyph { path, bbox_path };
                 glyphs.insert(c, glyph);
             }
         }
@@ -126,15 +141,14 @@ impl FontAnalysis {
         if let Some(glyph_id) = face.glyph_index(flower) {
             let (path, bb) = generate_path(&face, glyph_id);
             println!("Glyph {:?} bounding box: {:?}", ' ', bb);
-            let glyph = Glyph {
-                bounding_box: bb,
-                path,
-            };
+            let bbox_path = format!(
+                "M {} {} L {} {} L {} {} L {} {} Z",
+                bb.x_min, bb.y_min, bb.x_max, bb.y_min, bb.x_max, bb.y_max, bb.x_min, bb.y_max
+            );
+            let glyph = Glyph { path, bbox_path };
             glyphs.insert(flower, glyph);
         }
         let descender = face.descender();
-        //let units_per_em = face.units_per_em();
-        //let cell_size = face.height() as f64 * FONT_SIZE / units_per_em as f64;
         Ok(Self {
             descender,
             units_per_em,

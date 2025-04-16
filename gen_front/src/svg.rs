@@ -265,13 +265,12 @@ fn write_grid(
     let vert_spacing = square_height / (GRID_HEIGHT as f64);
     for (y, row) in GRID.iter().enumerate().take(GRID_HEIGHT) {
         for (x, c) in row.iter().enumerate().take(GRID_WIDTH) {
-            let x_str = (x as f64 * LED_SPACING + base_x).to_string();
-            let y_str = (y as f64 * vert_spacing + base_y).to_string();
+            let x_off = (x as f64 * LED_SPACING) + base_x;
+            let y_off = (y as f64 * vert_spacing) + base_y;
+            let x_str = x_off.to_string();
+            let y_str = y_off.to_string();
             let glyph = font.glyphs.get(c).unwrap();
             let path = glyph.path.clone();
-            let _bbox = glyph.bounding_box;
-            //let bbox_w = (bbox.x_max as f64 - bbox.x_min as f64) * scale;
-            //let dx = (cell_size - bbox_w) / 2.0;
 
             let transform = format!("matrix({} 0 0 {} {} {})", scale, -scale, x_str, y_str);
             let attrs = vec![
@@ -288,6 +287,20 @@ fn write_grid(
                 .create_element("path")
                 .with_attributes(attrs.into_iter())
                 .write_empty()?;
+            #[cfg(feature = "draw_bounding_box")]
+            {
+                let bbox_path_attrs = vec![
+                    ("d", glyph.bbox_path.as_str()),
+                    ("transform", transform.as_str()),
+                    ("fill", "none"),
+                    ("stroke", "darkorange"),
+                    ("stroke-width", "3"),
+                ];
+                writer
+                    .create_element("path")
+                    .with_attributes(bbox_path_attrs.into_iter())
+                    .write_empty()?;
+            }
         }
     }
     Ok(())

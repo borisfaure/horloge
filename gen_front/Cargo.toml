@@ -10,8 +10,9 @@ french = []
 english = []
 draw_leds = []
 draw_margins = []
+draw_bounding_box = []
 fill = []
-default = ["french", "draw_leds"]
+default = ["french", "draw_leds", "draw_margins", "draw_bounding_box"]
 
 [dependencies]
 quick-xml = "0.37"
