@@ -36,8 +36,6 @@ pub struct FontAnalysis {
     pub descender: i16,
     /// Ascender
     pub ascender: i16,
-    /// Units per EM
-    pub units_per_em: u16,
     /// Maximum height of the font
     pub y_max: i16,
     /// Average glyph width
@@ -165,7 +163,6 @@ impl FontAnalysis {
         Ok(Self {
             descender,
             ascender,
-            units_per_em,
             y_max,
             glyph_width_avg: glyph_width_sum as f64 / glyphs_count as f64,
             glyphs,

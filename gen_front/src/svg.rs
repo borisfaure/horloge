@@ -76,8 +76,6 @@ impl Sizes {
         const W: f64 = GRID_WIDTH as f64; // Number of columns in the grid
 
         // Ensure variables are valid to avoid undefined behavior
-        assert!(H > 1.0, "Grid height must be greater than 1.");
-        assert!(W > 1.0, "Grid width must be greater than 1.");
         assert!(k > 0.0, "Letter ratio (k) must be greater than 0.");
 
         // Derivation of the formula for `l`:
@@ -336,7 +334,6 @@ pub fn generate(file: &PathBuf, font: FontAnalysis) -> IoResult<()> {
     );
     let scale = sizes.scale;
     println!("scale:{}", scale);
-    let units_per_em = font.units_per_em as f64;
     let descender = font.descender as f64;
     println!("descender:{}", descender);
     let ascender = font.ascender as f64;
