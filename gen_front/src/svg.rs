@@ -283,9 +283,10 @@ fn write_grid(
 
             let glyph = font.glyphs.get(c).unwrap();
             let path = glyph.path.clone();
-            let glyph_width = (glyph.bbox.x_max - glyph.bbox.x_min) as f64;
             let x_min = glyph.bbox.x_min as f64;
-            let x = led_x_mid_off + (x_min - glyph_width / 2.0) * scale;
+            let x_max = glyph.bbox.x_max as f64;
+            let glyph_width = x_max - x_min;
+            let x = led_x_mid_off - (glyph_width / 2.0 + x_min) * scale;
 
             let x_str = x.to_string();
 
