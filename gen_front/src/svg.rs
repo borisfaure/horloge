@@ -157,7 +157,7 @@ impl Sizes {
 }
 
 /// Draw the LEDs in the grid
-//#[cfg(feature = "draw_leds")]
+#[cfg(feature = "draw_leds")]
 fn draw_leds(writer: &mut Writer<BufWriter<File>>, doc: &Sizes) -> IoResult<()> {
     // Compute the horizontal offset to center the LEDs
     let square_width = doc.document_width - 2.0 * MARGIN;
@@ -193,7 +193,7 @@ fn draw_leds(writer: &mut Writer<BufWriter<File>>, doc: &Sizes) -> IoResult<()> 
 /// constant MARGIN
 ///
 /// Draw 4 rectangles in blue that represent the margins of the document
-//#[cfg(feature = "draw_margins")]
+#[cfg(feature = "draw_margins")]
 fn draw_margins(writer: &mut Writer<BufWriter<File>>, doc: &Sizes) -> IoResult<()> {
     let width = doc.document_width.to_string();
     let margin = MARGIN.to_string();
