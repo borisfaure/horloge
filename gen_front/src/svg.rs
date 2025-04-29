@@ -201,7 +201,7 @@ fn draw_margins(writer: &mut Writer<BufWriter<File>>, doc: &Sizes) -> IoResult<(
         ("y", "0"),
         ("width", width.as_str()),
         ("height", margin.as_str()),
-        ("fill", "blue"),
+        ("fill", "lightblue"),
     ];
     writer
         .create_element("rect")
@@ -214,7 +214,7 @@ fn draw_margins(writer: &mut Writer<BufWriter<File>>, doc: &Sizes) -> IoResult<(
         ("y", y.as_str()),
         ("width", width.as_str()),
         ("height", margin.as_str()),
-        ("fill", "blue"),
+        ("fill", "lightblue"),
     ];
     writer
         .create_element("rect")
@@ -227,7 +227,7 @@ fn draw_margins(writer: &mut Writer<BufWriter<File>>, doc: &Sizes) -> IoResult<(
         ("y", "0"),
         ("width", margin.as_str()),
         ("height", height.as_str()),
-        ("fill", "blue"),
+        ("fill", "lightblue"),
     ];
     writer
         .create_element("rect")
@@ -240,7 +240,7 @@ fn draw_margins(writer: &mut Writer<BufWriter<File>>, doc: &Sizes) -> IoResult<(
         ("y", "0"),
         ("width", margin.as_str()),
         ("height", height.as_str()),
-        ("fill", "blue"),
+        ("fill", "lightblue"),
     ];
     writer
         .create_element("rect")
