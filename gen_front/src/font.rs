@@ -25,6 +25,8 @@ pub struct Glyph {
     pub path: String,
     /// Bounding box path
     pub bbox_path: String,
+    /// Bounding box
+    pub bbox: BoundingBox,
 }
 
 /// Font analysis structure
@@ -135,7 +137,11 @@ impl FontAnalysis {
                     "M {} {} L {} {} L {} {} L {} {} Z",
                     bb.x_min, bb.y_min, bb.x_max, bb.y_min, bb.x_max, bb.y_max, bb.x_min, bb.y_max
                 );
-                let glyph = Glyph { path, bbox_path };
+                let glyph = Glyph {
+                    path,
+                    bbox_path,
+                    bbox: bb,
+                };
                 glyphs.insert(c, glyph);
             }
         }
@@ -147,7 +153,11 @@ impl FontAnalysis {
                 "M {} {} L {} {} L {} {} L {} {} Z",
                 bb.x_min, bb.y_min, bb.x_max, bb.y_min, bb.x_max, bb.y_max, bb.x_min, bb.y_max
             );
-            let glyph = Glyph { path, bbox_path };
+            let glyph = Glyph {
+                path,
+                bbox_path,
+                bbox: bb,
+            };
             glyphs.insert(flower, glyph);
         }
         let descender = face.descender();
