@@ -257,20 +257,37 @@ fn write_grid(
     font: FontAnalysis,
     doc: &Sizes,
     scale: f64,
-    voffset: f64,
 ) -> IoResult<()> {
-    let base_y = MARGIN + voffset;
-    let base_x = MARGIN;
+    // Compute the horizontal offset to center the LEDs
+    let square_width = doc.document_width - 2.0 * MARGIN;
+    let right_offset = (square_width - (GRID_WIDTH as f64 - 1.) * LED_SPACING - LED_SIZE) / 2.;
+    // Compute the vertical spacing between the LEDs
     let square_height = doc.document_height - 2.0 * MARGIN;
     let vert_spacing = square_height / (GRID_HEIGHT as f64);
+
+    let y_max = font.y_max as f64;
+
+    let base_y = MARGIN + vert_spacing / 2. - LED_SIZE / 2.;
+    let base_x = MARGIN + right_offset;
+    // Compute the vertical spacing between the LEDs
+    let square_height = doc.document_height - 2.0 * MARGIN;
+    let vert_spacing = square_height / (GRID_HEIGHT as f64);
+
     for (y, row) in GRID.iter().enumerate().take(GRID_HEIGHT) {
+        let led_y_mid_off = (y as f64 * vert_spacing) + base_y + (LED_SIZE / 2.0);
+        let y: f64 = led_y_mid_off + y_max / 2.0 * scale;
+        let y_str = y.to_string();
+
         for (x, c) in row.iter().enumerate().take(GRID_WIDTH) {
-            let x_off = (x as f64 * LED_SPACING) + base_x;
-            let y_off = (y as f64 * vert_spacing) + base_y;
-            let x_str = x_off.to_string();
-            let y_str = y_off.to_string();
+            let led_x_mid_off = (x as f64 * LED_SPACING) + base_x + (LED_SIZE / 2.0);
+
             let glyph = font.glyphs.get(c).unwrap();
             let path = glyph.path.clone();
+            let glyph_width = (glyph.bbox.x_max - glyph.bbox.x_min) as f64;
+            let x_min = glyph.bbox.x_min as f64;
+            let x = led_x_mid_off + (x_min - glyph_width / 2.0) * scale;
+
+            let x_str = x.to_string();
 
             let transform = format!("matrix({} 0 0 {} {} {})", scale, -scale, x_str, y_str);
             let attrs = vec![
@@ -323,7 +340,6 @@ pub fn generate(file: &PathBuf, font: FontAnalysis) -> IoResult<()> {
     println!("descender:{}", descender);
     let ascender = font.ascender as f64;
     println!("ascender:{}", ascender);
-    let voffset = (units_per_em + descender) * scale;
     let width_mm = format!("{}mm", sizes.document_width);
     let height_mm = format!("{}mm", sizes.document_height);
     let view_box = format!("0 0 {} {}", sizes.document_width, sizes.document_height);
@@ -347,7 +363,7 @@ pub fn generate(file: &PathBuf, font: FontAnalysis) -> IoResult<()> {
             writer
                 .create_element("g")
                 .with_attributes(vec![("id", "grid")].into_iter())
-                .write_inner_content(|w| write_grid(w, font, &sizes, scale, voffset))?;
+                .write_inner_content(|w| write_grid(w, font, &sizes, scale))?;
             Ok(())
         })?;
     Ok(())
