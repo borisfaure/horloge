@@ -321,6 +321,8 @@ pub fn generate(file: &PathBuf, font: FontAnalysis) -> IoResult<()> {
     let units_per_em = font.units_per_em as f64;
     let descender = font.descender as f64;
     println!("descender:{}", descender);
+    let ascender = font.ascender as f64;
+    println!("ascender:{}", ascender);
     let voffset = (units_per_em + descender) * scale;
     let width_mm = format!("{}mm", sizes.document_width);
     let height_mm = format!("{}mm", sizes.document_height);

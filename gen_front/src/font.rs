@@ -32,6 +32,8 @@ pub struct Glyph {
 pub struct FontAnalysis {
     /// Descender
     pub descender: i16,
+    /// Ascender
+    pub ascender: i16,
     /// Units per EM
     pub units_per_em: u16,
     /// Maximum height of the font
@@ -149,8 +151,10 @@ impl FontAnalysis {
             glyphs.insert(flower, glyph);
         }
         let descender = face.descender();
+        let ascender = face.ascender();
         Ok(Self {
             descender,
+            ascender,
             units_per_em,
             y_max,
             glyph_width_avg: glyph_width_sum as f64 / glyphs_count as f64,
