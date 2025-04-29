@@ -296,7 +296,7 @@ fn write_grid(
                 ("stroke", "black"),
                 ("stroke-width", "5"),
                 #[cfg(feature = "fill")]
-                ("fill", "black"),
+                ("fill", "darkorange"),
                 #[cfg(not(feature = "fill"))]
                 ("fill", "none"),
             ];
@@ -310,7 +310,7 @@ fn write_grid(
                     ("d", glyph.bbox_path.as_str()),
                     ("transform", transform.as_str()),
                     ("fill", "none"),
-                    ("stroke", "darkorange"),
+                    ("stroke", "black"),
                     ("stroke-width", "3"),
                 ];
                 writer
