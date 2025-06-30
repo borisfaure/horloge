@@ -15,7 +15,7 @@ fill = []
 default = ["french", "draw_leds", "draw_margins", "draw_bounding_box"]
 
 [dependencies]
-quick-xml = "0.37"
+quick-xml = "0.38"
 clap = "4.5"
 ttf-parser = "0.25"
 thiserror = "2.0"
