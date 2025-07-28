@@ -23,8 +23,6 @@ pub struct BoundingBox {
 pub struct Glyph {
     /// Path
     pub path: String,
-    /// Bounding box path
-    pub bbox_path: String,
     /// Bounding box
     pub bbox: BoundingBox,
 }
@@ -131,15 +129,7 @@ impl FontAnalysis {
                 }
                 glyphs_count += 1;
                 glyph_width_sum += bb.x_max - bb.x_min;
-                let bbox_path = format!(
-                    "M {} {} L {} {} L {} {} L {} {} Z",
-                    bb.x_min, bb.y_min, bb.x_max, bb.y_min, bb.x_max, bb.y_max, bb.x_min, bb.y_max
-                );
-                let glyph = Glyph {
-                    path,
-                    bbox_path,
-                    bbox: bb,
-                };
+                let glyph = Glyph { path, bbox: bb };
                 glyphs.insert(c, glyph);
             }
         }
@@ -147,15 +137,7 @@ impl FontAnalysis {
         if let Some(glyph_id) = face.glyph_index(flower) {
             let (path, bb) = generate_path(&face, glyph_id);
             println!("Glyph {:?} bounding box: {:?}", ' ', bb);
-            let bbox_path = format!(
-                "M {} {} L {} {} L {} {} L {} {} Z",
-                bb.x_min, bb.y_min, bb.x_max, bb.y_min, bb.x_max, bb.y_max, bb.x_min, bb.y_max
-            );
-            let glyph = Glyph {
-                path,
-                bbox_path,
-                bbox: bb,
-            };
+            let glyph = Glyph { path, bbox: bb };
             glyphs.insert(flower, glyph);
         }
         let descender = face.descender();
