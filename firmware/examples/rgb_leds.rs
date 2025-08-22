@@ -6,13 +6,16 @@
 
 use defmt::*;
 use embassy_executor::Spawner;
-use embassy_rp::dma::{AnyChannel, Channel};
-use embassy_rp::peripherals::PIO0;
-use embassy_rp::pio::{
-    program::pio_file, Common, Config as PioConfig, FifoJoin, Instance, InterruptHandler, Pio,
-    PioPin, ShiftConfig, ShiftDirection, StateMachine,
+use embassy_rp::{
+    bind_interrupts, clocks,
+    dma::Channel as DmaChannel,
+    peripherals::PIO0,
+    pio::{
+        program::pio_file, Common, Config as PioConfig, FifoJoin, Instance, InterruptHandler, Pio,
+        PioPin, ShiftConfig, ShiftDirection, StateMachine,
+    },
+    Peri,
 };
-use embassy_rp::{bind_interrupts, clocks, into_ref, Peripheral, PeripheralRef};
 use embassy_time::{Duration, Ticker, Timer};
 use fixed::types::U24F8;
 use fixed_macro::fixed;
@@ -23,8 +26,8 @@ bind_interrupts!(struct Irqs {
     PIO0_IRQ_0 => InterruptHandler<PIO0>;
 });
 
-pub struct Ws2812<'d, P: Instance, const S: usize, const N: usize> {
-    dma: PeripheralRef<'d, AnyChannel>,
+pub struct Ws2812<'d, P: Instance, const S: usize, const N: usize, DMA: DmaChannel> {
+    dma: Peri<'d, DMA>,
     sm: StateMachine<'d, P, S>,
 }
 
@@ -51,15 +54,13 @@ impl RGB8 {
     }
 }
 
-impl<'d, P: Instance, const S: usize, const N: usize> Ws2812<'d, P, S, N> {
+impl<'d, P: Instance, const S: usize, const N: usize, DMA: DmaChannel> Ws2812<'d, P, S, N, DMA> {
     pub fn new(
         pio: &mut Common<'d, P>,
         mut sm: StateMachine<'d, P, S>,
-        dma: impl Peripheral<P = impl Channel> + 'd,
-        pin: impl PioPin,
+        dma: Peri<'d, DMA>,
+        pin: Peri<'d, impl PioPin>,
     ) -> Self {
-        into_ref!(dma);
-
         // Setup sm0
 
         // prepare the PIO program
@@ -92,10 +93,7 @@ impl<'d, P: Instance, const S: usize, const N: usize> Ws2812<'d, P, S, N> {
         sm.set_config(&cfg);
         sm.set_enable(true);
 
-        Self {
-            dma: dma.map_into(),
-            sm,
-        }
+        Self { dma, sm }
     }
 
     pub async fn write(&mut self, colors: &[RGB8; N]) {
