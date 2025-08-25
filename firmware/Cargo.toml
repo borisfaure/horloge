@@ -31,5 +31,5 @@ cortex-m-rt = "0.7.0"
 embedded-hal = "1.0"
 panic-probe = { version = "1.0", features = ["print-defmt"] }
 futures = { version = "0.3.17", default-features = false, features = ["async-await"] }
-heapless = { version = "0.8", default-features = false }
+heapless = { version = "0.9", default-features = false }
 nb = "1.0"
