@@ -305,8 +305,13 @@ fn write_grid(
                 .write_empty()?;
             #[cfg(feature = "draw_bounding_box")]
             {
+                let bb = &glyph.bbox;
+                let bbox_path = format!(
+                    "M {} {} L {} {} L {} {} L {} {} Z",
+                    bb.x_min, bb.y_min, bb.x_max, bb.y_min, bb.x_max, bb.y_max, bb.x_min, bb.y_max
+                );
                 let bbox_path_attrs = vec![
-                    ("d", glyph.bbox_path.as_str()),
+                    ("d", bbox_path.as_str()),
                     ("transform", transform.as_str()),
                     ("fill", "none"),
                     ("stroke", "black"),
