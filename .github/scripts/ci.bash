@@ -15,6 +15,13 @@ LANGUAGES=(
     [1]="english"
 )
 
+declare -A FRONT_FEATURES
+FRONT_FEATURES=(
+    [0]="draw_leds"
+    [1]="draw_margins"
+    [2]="draw_bounding_box"
+    [3]="fill"
+)
 
 run_doc() {
     rustup component add rust-docs
@@ -44,6 +51,10 @@ run_clippy() {
     do
         cargo clippy --target thumbv6m-none-eabi --bin firmware --no-default-features --features "$LANGUAGE" -- -D warnings
         cargo clippy --bin gen_front --no-default-features --features "$LANGUAGE"
+        for FEATURE in "${FRONT_FEATURES[@]}"
+        do
+            cargo clippy --bin gen_front --no-default-features --features "$LANGUAGE,$FEATURE"
+        done
     done
 }
 
@@ -56,6 +67,10 @@ run_check() {
     do
         cargo check --target thumbv6m-none-eabi --bin firmware --no-default-features --features "$LANGUAGE"
         cargo check --bin gen_front --no-default-features --features "$LANGUAGE"
+        for FEATURE in "${FRONT_FEATURES[@]}"
+        do
+            cargo check --bin gen_front --no-default-features --features "$LANGUAGE,$FEATURE"
+        done
     done
 }
 
@@ -73,6 +88,10 @@ run_build() {
     do
         cargo build --target thumbv6m-none-eabi --bin firmware --no-default-features --features "$LANGUAGE"
         cargo build --bin gen_front --no-default-features --features "$LANGUAGE"
+        for FEATURE in "${FRONT_FEATURES[@]}"
+        do
+            cargo build --bin gen_front --no-default-features --features "$LANGUAGE,$FEATURE"
+        done
     done
 }
 
@@ -85,6 +104,10 @@ run_build_release() {
     do
         cargo build --release --target thumbv6m-none-eabi --bin firmware --no-default-features --features "$LANGUAGE"
         cargo build --release --bin gen_front --no-default-features --features "$LANGUAGE"
+        for FEATURE in "${FRONT_FEATURES[@]}"
+        do
+            cargo build --release --bin gen_front --no-default-features --features "$LANGUAGE,$FEATURE"
+        done
     done
 }
 
