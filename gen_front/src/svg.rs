@@ -249,6 +249,40 @@ fn draw_margins(writer: &mut Writer<BufWriter<File>>, doc: &Sizes) -> IoResult<(
     Ok(())
 }
 
+/// Draw a single minute glyph at position (x, y)
+fn draw_minute(
+    writer: &mut Writer<BufWriter<File>>,
+    path: &str,
+    scale: f64,
+    x: f64,
+    y: f64,
+) -> IoResult<()> {
+    // Position on top side, in the middlej
+    // Position on the left side
+    let transform = format!(
+        "matrix({} 0 0 {} {} {})",
+        scale,
+        -scale,
+        x.to_string(),
+        y.to_string()
+    );
+    let attrs = vec![
+        ("d", path),
+        ("transform", transform.as_str()),
+        ("stroke", "black"),
+        ("stroke-width", "5"),
+        #[cfg(feature = "fill")]
+        ("fill", "darkorange"),
+        #[cfg(not(feature = "fill"))]
+        ("fill", "none"),
+    ];
+    writer
+        .create_element("path")
+        .with_attributes(attrs.into_iter())
+        .write_empty()?;
+    Ok(())
+}
+
 /// Draw the minutes on each side of the grid
 fn draw_minutes(
     writer: &mut Writer<BufWriter<File>>,
@@ -266,31 +300,21 @@ fn draw_minutes(
     let mid_x = (glyph_width / 2.0 + x_min) * scale;
     let mid_y = glyph_height / 2.0 * scale;
 
-    // Position on top side, in the middlej
-    let x = doc.document_width / 2.0 - mid_x;
-    let y = MARGIN / 2.0 + mid_y;
-    // Position on the left side
-    let transform = format!(
-        "matrix({} 0 0 {} {} {})",
-        scale,
-        -scale,
-        x.to_string(),
-        y.to_string()
-    );
-    let attrs = vec![
-        ("d", path.as_str()),
-        ("transform", transform.as_str()),
-        ("stroke", "black"),
-        ("stroke-width", "5"),
-        #[cfg(feature = "fill")]
-        ("fill", "darkorange"),
-        #[cfg(not(feature = "fill"))]
-        ("fill", "none"),
+    let x_left = MARGIN / 2.0 - mid_x;
+    let x_mid = doc.document_width / 2.0 - mid_x;
+    let x_right = doc.document_width - MARGIN / 2.0 - mid_x;
+    let y_top = MARGIN / 2.0 + mid_y;
+    let y_mid = doc.document_height / 2.0 + mid_y;
+    let y_bottom = doc.document_height - MARGIN / 2.0 + mid_y;
+    let positions = vec![
+        (x_mid, y_top),
+        (x_right, y_mid),
+        (x_mid, y_bottom),
+        (x_left, y_mid),
     ];
-    writer
-        .create_element("path")
-        .with_attributes(attrs.into_iter())
-        .write_empty()?;
+    for (x, y) in positions {
+        draw_minute(writer, &path, scale, x, y)?;
+    }
     Ok(())
 }
 
