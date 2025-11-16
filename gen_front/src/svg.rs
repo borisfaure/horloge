@@ -7,7 +7,7 @@ use std::io::BufWriter;
 use std::io::Result as IoResult;
 use std::path::PathBuf;
 
-use crate::font::FontAnalysis;
+use crate::font::{FontAnalysis, FLOWER};
 
 // Letter N: 31.45mm width, 51mm height
 const LED_SIZE: f64 = 5f64;
@@ -249,6 +249,51 @@ fn draw_margins(writer: &mut Writer<BufWriter<File>>, doc: &Sizes) -> IoResult<(
     Ok(())
 }
 
+/// Draw the minutes on each side of the grid
+fn draw_minutes(
+    writer: &mut Writer<BufWriter<File>>,
+    c: char,
+    font: &FontAnalysis,
+    doc: &Sizes,
+    scale: f64,
+) -> IoResult<()> {
+    let glyph = font.glyphs.get(&c).unwrap();
+    let path = glyph.path.clone();
+    let x_min = glyph.bbox.x_min as f64;
+    let x_max = glyph.bbox.x_max as f64;
+    let glyph_width = x_max - x_min;
+    let glyph_height = (glyph.bbox.y_max - glyph.bbox.y_min) as f64;
+    let mid_x = (glyph_width / 2.0 + x_min) * scale;
+    let mid_y = glyph_height / 2.0 * scale;
+
+    // Position on top side, in the middlej
+    let x = doc.document_width / 2.0 - mid_x;
+    let y = MARGIN / 2.0 + mid_y;
+    // Position on the left side
+    let transform = format!(
+        "matrix({} 0 0 {} {} {})",
+        scale,
+        -scale,
+        x.to_string(),
+        y.to_string()
+    );
+    let attrs = vec![
+        ("d", path.as_str()),
+        ("transform", transform.as_str()),
+        ("stroke", "black"),
+        ("stroke-width", "5"),
+        #[cfg(feature = "fill")]
+        ("fill", "darkorange"),
+        #[cfg(not(feature = "fill"))]
+        ("fill", "none"),
+    ];
+    writer
+        .create_element("path")
+        .with_attributes(attrs.into_iter())
+        .write_empty()?;
+    Ok(())
+}
+
 /// Write the grid to the SVG file
 fn write_grid(
     writer: &mut Writer<BufWriter<File>>,
@@ -363,6 +408,7 @@ pub fn generate(file: &PathBuf, font: FontAnalysis) -> IoResult<()> {
             draw_leds(writer, &sizes)?;
             #[cfg(feature = "draw_margins")]
             draw_margins(writer, &sizes)?;
+            draw_minutes(writer, FLOWER, &font, &sizes, scale)?;
             writer
                 .create_element("g")
                 .with_attributes(vec![("id", "grid")].into_iter())

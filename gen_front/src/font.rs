@@ -4,6 +4,8 @@ use std::collections::HashMap;
 use thiserror::Error;
 use ttf_parser::{Face, GlyphId, OutlineBuilder, Rect};
 
+pub const FLOWER: char = '\u{2698}';
+
 #[derive(Debug, Error)]
 pub enum Error {
     #[error("Font Face Parse Error: {0}")]
@@ -133,12 +135,11 @@ impl FontAnalysis {
                 glyphs.insert(c, glyph);
             }
         }
-        let flower = '\u{2698}';
-        if let Some(glyph_id) = face.glyph_index(flower) {
+        if let Some(glyph_id) = face.glyph_index(FLOWER) {
             let (path, bb) = generate_path(&face, glyph_id);
             println!("Glyph {:?} bounding box: {:?}", ' ', bb);
             let glyph = Glyph { path, bbox: bb };
-            glyphs.insert(flower, glyph);
+            glyphs.insert(FLOWER, glyph);
         }
         let descender = face.descender();
         let ascender = face.ascender();
