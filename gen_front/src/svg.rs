@@ -7,11 +7,18 @@ use std::io::BufWriter;
 use std::io::Result as IoResult;
 use std::path::PathBuf;
 
+#[cfg(feature = "fill")]
+const FILL_COLOR: &str = "black";
+//const FILL_COLOR: &str = "darkorange";
+
 use crate::font::{FontAnalysis, FLOWER};
 
 // Letter N: 31.45mm width, 51mm height
 const LED_SIZE: f64 = 5f64;
 const LED_SPACING: f64 = 12f64 + LED_SIZE;
+
+const HOLE_DIAMETER: f64 = 3.3; // M4 according to
+                                // https://www.laserboost.com/design-guide-for-threaded-and-counterbored-components/
 
 const GRID_WIDTH: usize = 11;
 const GRID_HEIGHT: usize = 10;
@@ -259,20 +266,14 @@ fn draw_minute(
 ) -> IoResult<()> {
     // Position on top side, in the middlej
     // Position on the left side
-    let transform = format!(
-        "matrix({} 0 0 {} {} {})",
-        scale,
-        -scale,
-        x.to_string(),
-        y.to_string()
-    );
+    let transform = format!("matrix({} 0 0 {} {} {})", scale, -scale, x, y);
     let attrs = vec![
         ("d", path),
         ("transform", transform.as_str()),
         ("stroke", "black"),
         ("stroke-width", "5"),
         #[cfg(feature = "fill")]
-        ("fill", "darkorange"),
+        ("fill", FILL_COLOR),
         #[cfg(not(feature = "fill"))]
         ("fill", "none"),
     ];
@@ -314,6 +315,49 @@ fn draw_minutes(
     ];
     for (x, y) in positions {
         draw_minute(writer, &path, scale, x, y)?;
+    }
+    Ok(())
+}
+
+/// Draw a circle of radius `hole_radius` at position (x, y)
+fn draw_hole(writer: &mut Writer<BufWriter<File>>, x: f64, y: f64) -> IoResult<()> {
+    let radius_str = (HOLE_DIAMETER / 2.0).to_string();
+    let x_str = x.to_string();
+    let y_str = y.to_string();
+    let attrs = vec![
+        ("r", radius_str.as_str()),
+        ("cx", x_str.as_str()),
+        ("cy", y_str.as_str()),
+        ("stroke", "black"),
+        ("stroke-width", "5"),
+        #[cfg(feature = "fill")]
+        ("fill", FILL_COLOR),
+        #[cfg(not(feature = "fill"))]
+        ("fill", "none"),
+    ];
+    writer
+        .create_element("circle")
+        .with_attributes(attrs.into_iter())
+        .write_empty()?;
+    Ok(())
+}
+
+/// Draw the holes on each corner of the grid
+fn draw_holes(writer: &mut Writer<BufWriter<File>>, doc: &Sizes) -> IoResult<()> {
+    let hole_radius = HOLE_DIAMETER / 2.0;
+
+    let x_left = MARGIN / 2.0 - hole_radius;
+    let x_right = doc.document_width - MARGIN / 2.0 - hole_radius;
+    let y_top = MARGIN / 2.0 + hole_radius;
+    let y_bottom = doc.document_height - hole_radius - MARGIN / 2.0;
+    let positions = vec![
+        (x_left, y_top),
+        (x_right, y_top),
+        (x_right, y_bottom),
+        (x_left, y_bottom),
+    ];
+    for (x, y) in positions {
+        draw_hole(writer, x, y)?;
     }
     Ok(())
 }
@@ -364,7 +408,7 @@ fn write_grid(
                 ("stroke", "black"),
                 ("stroke-width", "5"),
                 #[cfg(feature = "fill")]
-                ("fill", "darkorange"),
+                ("fill", FILL_COLOR),
                 #[cfg(not(feature = "fill"))]
                 ("fill", "none"),
             ];
@@ -433,6 +477,7 @@ pub fn generate(file: &PathBuf, font: FontAnalysis) -> IoResult<()> {
             #[cfg(feature = "draw_margins")]
             draw_margins(writer, &sizes)?;
             draw_minutes(writer, FLOWER, &font, &sizes, scale)?;
+            draw_holes(writer, &sizes)?;
             writer
                 .create_element("g")
                 .with_attributes(vec![("id", "grid")].into_iter())
