@@ -181,11 +181,11 @@ fn write_line(writer: &mut BufWriter<File>, x1: f64, y1: f64, x2: f64, y2: f64) 
     Ok(())
 }
 
-fn parse_svg_path(path_data: &str, transform: &Matrix) -> Vec<Point> {
+fn parse_svg_path(path_data: &str, transform: &Matrix) -> Vec<Vec<Point>> {
     let mut points = Vec::new();
     let tokens: Vec<&str> = path_data.split_whitespace().collect();
     let mut i = 0;
-    let mut current = Point { x: 0.0, y: 0.0 };
+    let mut splines = Vec::new();
 
     while i < tokens.len() {
         let cmd = tokens[i];
@@ -197,8 +197,7 @@ fn parse_svg_path(path_data: &str, transform: &Matrix) -> Vec<Point> {
                 if i + 1 < tokens.len() {
                     let x: f64 = tokens[i].parse().unwrap_or(0.0);
                     let y: f64 = tokens[i + 1].parse().unwrap_or(0.0);
-                    current = transform_point(x, y, transform);
-                    points.push(current);
+                    points.push(transform_point(x, y, transform));
                     i += 2;
                 }
             }
@@ -207,8 +206,7 @@ fn parse_svg_path(path_data: &str, transform: &Matrix) -> Vec<Point> {
                 if i + 1 < tokens.len() {
                     let x: f64 = tokens[i].parse().unwrap_or(0.0);
                     let y: f64 = tokens[i + 1].parse().unwrap_or(0.0);
-                    current = transform_point(x, y, transform);
-                    points.push(current);
+                    points.push(transform_point(x, y, transform));
                     i += 2;
                 }
             }
@@ -226,8 +224,6 @@ fn parse_svg_path(path_data: &str, transform: &Matrix) -> Vec<Point> {
                     // Add control point and end point for spline
                     points.push(control);
                     points.push(end);
-
-                    current = end;
                     i += 4;
                 }
             }
@@ -236,14 +232,15 @@ fn parse_svg_path(path_data: &str, transform: &Matrix) -> Vec<Point> {
                 if !points.is_empty() {
                     points.push(points[0]);
                 }
+                splines.push(points.clone());
+                points.clear();
             }
             _ => {
                 // Try to parse as number (implicit line continuation)
                 if let Ok(x) = cmd.parse::<f64>() {
                     if i < tokens.len() {
                         let y: f64 = tokens[i].parse().unwrap_or(0.0);
-                        current = transform_point(x, y, transform);
-                        points.push(current);
+                        points.push(transform_point(x, y, transform));
                         i += 1;
                     }
                 }
@@ -251,7 +248,11 @@ fn parse_svg_path(path_data: &str, transform: &Matrix) -> Vec<Point> {
         }
     }
 
-    points
+    if !points.is_empty() {
+        splines.push(points);
+    }
+
+    splines
 }
 
 fn transform_point(x: f64, y: f64, m: &Matrix) -> Point {
@@ -322,8 +323,10 @@ fn write_path(writer: &mut BufWriter<File>, height: f64, path: Path, scale: f64)
         e: path.x,
         f: height - path.y,
     };
-    let points = parse_svg_path(path.d.as_str(), &transform);
-    write_spline(writer, &points)?;
+    let points_vec = parse_svg_path(path.d.as_str(), &transform);
+    for segment in points_vec {
+        write_spline(writer, &segment)?;
+    }
     Ok(())
 }
 
