@@ -27,6 +27,12 @@ fn write_dxf_header(writer: &mut BufWriter<File>, width: f64, height: f64) -> Io
     writeln!(writer, "2")?;
     writeln!(writer, "HEADER")?;
 
+    // $INSUNITS to millimeters
+    writeln!(writer, "9")?;
+    writeln!(writer, "$INSUNITS")?;
+    writeln!(writer, "70")?;
+    writeln!(writer, "4")?;
+
     // Set drawing extents (bounding box)
     writeln!(writer, "9")?;
     writeln!(writer, "$EXTMIN")?;
