@@ -47,7 +47,7 @@ fn main() {
     let ext = file.extension().unwrap().to_str().unwrap();
     match ext {
         "svg" => {}
-        //"dxf" => {}
+        "dxf" => {}
         _ => panic!("File must end with .svg or .dxf"),
     }
     let cover = cover::Cover::new(fa);
